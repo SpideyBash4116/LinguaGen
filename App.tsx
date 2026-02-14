@@ -236,7 +236,7 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-slate-500 mb-4 line-clamp-2 italic">"{lang.description}"</p>
+                <p className="text-sm text-slate-500 mb-4 line-clamp-2 italic text-left">"{lang.description}"</p>
                 <div className="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100 flex justify-between">
                   <span>{lang.phonemes.length} Phonemes</span>
                   <span>{new Date(lang.createdAt).toLocaleDateString()}</span>
@@ -347,7 +347,7 @@ const App: React.FC = () => {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                 <h2 className="text-xl font-bold text-slate-900 mb-4">2. Linguistic Profile</h2>
-                <p className="text-slate-700 leading-relaxed italic border-l-4 border-indigo-200 pl-4">{currentLang.description}</p>
+                <p className="text-slate-700 leading-relaxed italic border-l-4 border-indigo-200 pl-4 text-left">{currentLang.description}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -399,7 +399,7 @@ const App: React.FC = () => {
                     <tbody className="divide-y divide-slate-100">
                       {currentLang.vocabulary?.map(word => (
                         <tr key={word.id} className="group hover:bg-slate-50 transition-colors">
-                          <td className="py-4 text-slate-900 font-semibold text-sm">{word.meaning}</td>
+                          <td className="py-4 text-slate-900 font-semibold text-sm uppercase tracking-tighter">{word.meaning}</td>
                           <td className="py-4 font-bold text-indigo-600 ipa-font text-2xl">{word.native}</td>
                           <td className="py-4 text-slate-500 ipa-font font-medium">/{word.pronunciation}/</td>
                         </tr>
@@ -461,15 +461,15 @@ const App: React.FC = () => {
 
       {showPublishGuide && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl max-md w-full overflow-hidden animate-in zoom-in-95 duration-200 max-w-md">
             <div className="p-8">
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex justify-between items-center mb-8 text-left">
                 <h3 className="text-2xl font-extrabold text-slate-900">Publishing Help</h3>
                 <button onClick={() => setShowPublishGuide(false)} className="text-slate-400 hover:text-slate-600 bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                   <i className="fa-solid fa-times text-lg"></i>
                 </button>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-6 text-left">
                 <div className="flex gap-4">
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
@@ -481,7 +481,7 @@ const App: React.FC = () => {
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">2</div>
                   <div>
                     <h4 className="font-bold text-slate-800">Environment Keys</h4>
-                    <p className="text-sm text-slate-500 mt-1">Set your <code>API_KEY</code> in the Netlify dashboard under "Site settings > Environment variables".</p>
+                    <p className="text-sm text-slate-500 mt-1">Set your <code>API_KEY</code> in the Netlify dashboard under &quot;Site settings &gt; Environment variables&quot;.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -501,7 +501,7 @@ const App: React.FC = () => {
       )}
 
       <footer className="bg-slate-900 text-slate-400 py-16 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
           <div className="space-y-4">
             <div className="flex items-center">
               <i className="fa-solid fa-language text-2xl text-indigo-400 mr-3"></i>
