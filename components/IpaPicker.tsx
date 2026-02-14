@@ -29,7 +29,7 @@ export const IpaPicker: React.FC<IpaPickerProps> = ({ selected, onChange }) => {
             key={item.symbol}
             onClick={() => toggleSymbol(item.symbol)}
             title={`${item.description} (e.g. ${item.example})`}
-            className={`h-11 w-full flex items-center justify-center rounded border transition-all ipa-font text-lg
+            className={`h-11 min-w-[40px] w-full flex items-center justify-center rounded border transition-all ipa-font text-lg px-1
               ${selected.includes(item.symbol) 
                 ? 'bg-indigo-600 border-indigo-700 text-white shadow-sm scale-105 z-10' 
                 : 'bg-white border-slate-200 hover:border-indigo-300 text-slate-700 hover:bg-indigo-50'}`}
@@ -43,10 +43,10 @@ export const IpaPicker: React.FC<IpaPickerProps> = ({ selected, onChange }) => {
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-      <Section title="Pulmonic Consonants" items={PULMONIC_CONSONANTS} />
+      <Section title="Primary Consonants" items={PULMONIC_CONSONANTS} />
       <Section title="Non-Pulmonic & Clicks" items={NON_PULMONIC} cols="grid-cols-6 sm:grid-cols-8 md:grid-cols-10" />
+      <Section title="Affricates & Extensions" items={EXT_IPA} cols="grid-cols-6 sm:grid-cols-10 md:grid-cols-12" />
       <Section title="Vowels" items={VOWELS} cols="grid-cols-6 sm:grid-cols-8 md:grid-cols-10" />
-      <Section title="extIPA & Rare Extensions" items={EXT_IPA} cols="grid-cols-6 sm:grid-cols-10 md:grid-cols-12" />
       <Section title="Diacritics & Modifiers" items={DIACRITICS} cols="grid-cols-6 sm:grid-cols-10 md:grid-cols-12" />
       <Section title="Stress & Tones" items={TONES_STRESS} cols="grid-cols-4 sm:grid-cols-7" />
       
