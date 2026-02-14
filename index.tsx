@@ -3,12 +3,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-console.log("LinguaGen: Initializing React Application...");
+console.log("GlossaForge: Initializing React Application...");
 
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  console.error("LinguaGen Error: Target container #root not found in DOM.");
+  console.error("GlossaForge Error: Target container #root not found in DOM.");
 } else {
   try {
     const root = ReactDOM.createRoot(rootElement);
@@ -17,8 +17,8 @@ if (!rootElement) {
         <App />
       </React.StrictMode>
     );
-    console.log("LinguaGen: Successfully mounted to #root.");
+    console.log("GlossaForge: Successfully mounted to #root.");
   } catch (err) {
-    console.error("LinguaGen Error during render:", err);
+    console.error("GlossaForge Error during render:", err);
   }
 }

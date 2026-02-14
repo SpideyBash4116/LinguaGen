@@ -30,7 +30,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Check for saved data
-    const saved = localStorage.getItem('linguagen_saved');
+    const saved = localStorage.getItem('glossaforge_saved');
     if (saved) {
       try {
         setSavedLangs(JSON.parse(saved));
@@ -55,7 +55,7 @@ const App: React.FC = () => {
   }, []);
 
   const saveToLocalStorage = (langs: Conlang[]) => {
-    localStorage.setItem('linguagen_saved', JSON.stringify(langs));
+    localStorage.setItem('glossaforge_saved', JSON.stringify(langs));
   };
 
   const handleStartNew = () => {
@@ -174,7 +174,7 @@ const App: React.FC = () => {
       <div className="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200">
         <i className="fa-solid fa-language text-4xl"></i>
       </div>
-      <h1 className="text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">LinguaGen</h1>
+      <h1 className="text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">GlossaForge</h1>
       <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
         Linguistic engineering made easy. Construct languages with IPA precision and AI-driven logic.
       </p>
@@ -224,7 +224,7 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {savedLangs.map(lang => (
             <div key={lang.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="p-6">
+              <div className="p-6 text-left">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-bold text-slate-900">{lang.name}</h3>
                   <div className="flex gap-2">
@@ -236,7 +236,7 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-slate-500 mb-4 line-clamp-2 italic text-left">"{lang.description}"</p>
+                <p className="text-sm text-slate-500 mb-4 line-clamp-2 italic">"{lang.description}"</p>
                 <div className="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100 flex justify-between">
                   <span>{lang.phonemes.length} Phonemes</span>
                   <span>{new Date(lang.createdAt).toLocaleDateString()}</span>
@@ -442,7 +442,7 @@ const App: React.FC = () => {
               <div className="bg-indigo-600 p-2 rounded-lg mr-3 shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
                 <i className="fa-solid fa-language text-white text-lg"></i>
               </div>
-              <span className="text-xl font-black text-slate-900 tracking-tighter">LinguaGen</span>
+              <span className="text-xl font-black text-slate-900 tracking-tighter">GlossaForge</span>
             </div>
             <div className="hidden md:flex items-center space-x-2">
               <Button variant="ghost" size="sm" onClick={() => setAppState(AppState.SAVED)}>Library</Button>
@@ -505,7 +505,7 @@ const App: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center">
               <i className="fa-solid fa-language text-2xl text-indigo-400 mr-3"></i>
-              <span className="text-xl font-bold text-white tracking-tighter">LinguaGen</span>
+              <span className="text-xl font-bold text-white tracking-tighter">GlossaForge</span>
             </div>
             <p className="text-sm leading-relaxed">
               Professional tools for linguistic worldbuilding. Built with passion for writers, game designers, and conlangers.
@@ -531,7 +531,7 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-slate-800 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <span>&copy; 2026 LinguaGen Labs. All rights reserved.</span>
+          <span>&copy; 2026 GlossaForge Laboratory. All rights reserved.</span>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white"><i className="fa-brands fa-github text-lg"></i></a>
             <a href="#" className="hover:text-white"><i className="fa-brands fa-discord text-lg"></i></a>
