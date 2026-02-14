@@ -4,38 +4,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinguaGen - Professional Language Construction</title>
+  <title>LinguaGen - Language Construction Lab</title>
+  
+  <!-- Critical: Define process.env before any modules load to prevent ReferenceErrors -->
+  <script>
+    window.process = {
+      env: {
+        NODE_ENV: 'production',
+        API_KEY: '' // This will be populated by the platform or handled safely in code
+      }
+    };
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
   <style>
-    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
     .ipa-font { font-family: 'Gentium Book Plus', serif; }
+    
+    /* Loading state for slow connections */
     #root:empty::before {
-      content: "Initializing LinguaGen Engine...";
+      content: "";
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      color: #64748b;
-      font-size: 1.1rem;
-      font-weight: 500;
+      background: #f8fafc;
+      color: #6366f1;
+      font-weight: 600;
+      content: "Initializing LinguaGen Engine...";
     }
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react-dom/": "https://esm.sh/react-dom@19.0.0/",
+      "react/": "https://esm.sh/react@19.0.0/",
+      "react": "https://esm.sh/react@19.0.0",
+      "react-dom": "https://esm.sh/react-dom@19.0.0",
+      "@google/genai": "https://esm.sh/@google/genai@1.41.0"
+    }
   }
-}
-</script>
+  </script>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-slate-50">
   <div id="root"></div>
-  <!-- This tag was missing - it tells the browser to run your code! -->
-  <script type="module" src="./index.tsx"></script>
+  <!-- Use a slightly more robust pathing for the entry point -->
+  <script type="module" src="index.tsx"></script>
 </body>
 </html>

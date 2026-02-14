@@ -2,14 +2,28 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { GrammarRules, VocabularyWord } from "../types";
 
-const API_KEY = process.env.API_KEY || '';
+// Safe access to environment variables
+const getApiKey = () => {
+  try {
+    return (window as any).process?.env?.API_KEY || (process as any)?.env?.API_KEY || '';
+  } catch (e) {
+    return '';
+  }
+};
 
 export const generateLanguageCore = async (
   name: string,
   vibe: string,
   phonemes: string[]
 ): Promise<{ grammar: GrammarRules; vocabulary: VocabularyWord[]; description: string }> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    console.error("Missing Gemini API Key. Ensure process.env.API_KEY is set.");
+    throw new Error("API configuration missing. Please check your environment variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `
     You are a professional linguist and conlanger. 
@@ -18,11 +32,11 @@ export const generateLanguageCore = async (
     Allowed sounds (IPA): ${phonemes.join(', ')}
     
     Task:
-    1. Write a short 1-2 sentence description of the language's history or personality.
-    2. Determine basic grammar: Word Order (e.g., SVO), how plurals are formed, how past tense is formed, and where adjectives go.
-    3. Generate 10 basic vocabulary words based on the provided IPA sounds and vibe.
+    1. Write a short 2-3 sentence description of the language's historical origins and its aesthetic "feel".
+    2. Determine basic grammar: Word Order (e.g., VSO, SOV), how plurals are formed (affixes, reduplication, etc.), how past tense is formed, and adjective-noun positioning.
+    3. Generate 15 basic vocabulary words using the allowed IPA.
     
-    Ensure all native words ONLY use the provided IPA symbols or very close variations.
+    Ensure native words STRICTLY use the provided IPA symbols or standard variations.
   `;
 
   const response = await ai.models.generateContent({
@@ -64,9 +78,11 @@ export const generateLanguageCore = async (
   });
 
   try {
-    return JSON.parse(response.text);
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI");
+    return JSON.parse(text);
   } catch (e) {
     console.error("Failed to parse Gemini response", e);
-    throw new Error("Linguistic generation failed.");
+    throw new Error("The AI provided an invalid linguistic structure. Please try again.");
   }
 };
