@@ -83,16 +83,21 @@ const App: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!currentLang.name || (currentLang.phonemes?.length || 0) === 0) {
-      setError("Provide a language name and select phonemes to proceed.");
+    if (!currentLang.name) {
+      setError("Please provide a name for your language first.");
       return;
     }
+    if (!currentLang.phonemes || currentLang.phonemes.length === 0) {
+      setError("Please select at least one IPA symbol to build your phonology.");
+      return;
+    }
+    
     setError(null);
     setIsGenerating(true);
     try {
       const result = await generateLanguageCore(
         currentLang.name!,
-        currentLang.vibe || 'Generic constructed language',
+        currentLang.vibe || 'A unique constructed language',
         currentLang.phonemes!
       );
       setCurrentLang(prev => ({
@@ -102,7 +107,8 @@ const App: React.FC = () => {
         vocabulary: result.vocabulary
       }));
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred during generation.");
+      console.error("Generation failed:", err);
+      setError(err.message || "Linguistic engine error. Check your API configuration and try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -297,7 +303,7 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-3">
             <Button onClick={handleGenerate} loading={isGenerating} size="lg" className="w-full">
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> 
-              {currentLang.vocabulary?.length ? 'Refine Language' : 'Generate Language'}
+              {currentLang.vocabulary?.length ? 'Regenerate Language' : 'Generate Language'}
             </Button>
             
             {currentLang.vocabulary?.length ? (
@@ -313,8 +319,14 @@ const App: React.FC = () => {
             <Button variant="ghost" onClick={() => setAppState(AppState.HOME)}>Exit</Button>
           </div>
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 shadow-sm animate-pulse">
-              <i className="fa-solid fa-circle-exclamation mr-2"></i> {error}
+            <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200 shadow-sm">
+              <div className="flex items-start">
+                <i className="fa-solid fa-circle-exclamation mr-2 mt-0.5"></i>
+                <div>
+                  <p className="font-bold mb-1">Generation Issue</p>
+                  <p className="opacity-90">{error}</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -414,7 +426,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col items-center">
                    <div className="inline-block animate-spin h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full mb-6"></div>
                    <h3 className="text-xl font-bold text-slate-900 mb-2">Analyzing Phonemes...</h3>
-                   <p className="text-slate-500 max-w-sm mx-auto">Gemini 3 Pro is constructing grammar and vocabulary based on your phonetic inventory.</p>
+                   <p className="text-slate-500 max-w-sm mx-auto">Gemini 3 Flash is constructing your linguistic foundation. This usually takes 5-10 seconds.</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
@@ -473,7 +485,7 @@ const App: React.FC = () => {
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
                     <h4 className="font-bold text-slate-800">Language Generation</h4>
-                    <p className="text-sm text-slate-500 mt-1">Uses Gemini 3 Pro to create grammatically consistent languages. Requires a valid API key in environment variables.</p>
+                    <p className="text-sm text-slate-500 mt-1">Uses Gemini 3 Flash to create grammatically consistent languages based on your phonology.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -487,7 +499,7 @@ const App: React.FC = () => {
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">3</div>
                   <div>
                     <h4 className="font-bold text-slate-800">Deep Sharing</h4>
-                    <p className="text-sm text-slate-500 mt-1">Sharing encodes the entire project state into the URL, allowing instant collaboration without a backend.</p>
+                    <p className="text-sm text-slate-500 mt-1">Sharing encodes the entire project state into the URL, allowing instant collaboration.</p>
                   </div>
                 </div>
               </div>
@@ -521,10 +533,10 @@ const App: React.FC = () => {
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">System Status</h4>
             <div className="flex items-center text-xs text-green-400 bg-green-400/10 self-start px-3 py-1 rounded-full border border-green-400/20">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-              Gemini 3 Pro Online
+              Gemini 3 Flash Online
             </div>
             <p className="text-xs text-slate-500 mt-4">
-              v2.5.1 • React 19 Engine
+              v2.5.2 • React 19 Engine
             </p>
           </div>
         </div>
