@@ -4,7 +4,7 @@ import { AppState, Conlang, VocabularyWord } from './types';
 import { Button } from './components/Button';
 import { IpaPicker } from './components/IpaPicker';
 import { PRESETS } from './constants';
-import { generateLanguageCore } from './services/geminiService';
+import { generateLanguageCore, extendVocabulary, askLinguisticAssistant } from './services/geminiService';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.HOME);
@@ -23,10 +23,15 @@ const App: React.FC = () => {
     }
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
+  const [isAsking, setIsAsking] = useState(false);
+  const [assistantQuery, setAssistantQuery] = useState('');
+  const [assistantChat, setAssistantChat] = useState<{role: 'user' | 'assistant', text: string}[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [showPublishGuide, setShowPublishGuide] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('glossaforge_saved');
@@ -52,6 +57,10 @@ const App: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [assistantChat]);
+
   const saveToLocalStorage = (langs: Conlang[]) => {
     localStorage.setItem('glossaforge_saved', JSON.stringify(langs));
   };
@@ -70,6 +79,7 @@ const App: React.FC = () => {
         adjectivePlacement: ''
       }
     });
+    setAssistantChat([]);
     setAppState(AppState.EDITOR);
     setError(null);
   };
@@ -107,10 +117,44 @@ const App: React.FC = () => {
         vocabulary: result.vocabulary
       }));
     } catch (err: any) {
-      console.error("Generation failed:", err);
-      setError(err.message || "Linguistic engine error. Check your API configuration and try again.");
+      setError(err.message || "Linguistic engine error.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleExtendVocabulary = async () => {
+    if (isExtending) return;
+    setIsExtending(true);
+    try {
+      const newWords = await extendVocabulary(currentLang);
+      setCurrentLang(prev => ({
+        ...prev,
+        vocabulary: [...(prev.vocabulary || []), ...newWords]
+      }));
+    } catch (err) {
+      setError("Failed to generate new words.");
+    } finally {
+      setIsExtending(false);
+    }
+  };
+
+  const handleAskAssistant = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!assistantQuery.trim() || isAsking) return;
+
+    const query = assistantQuery;
+    setAssistantQuery('');
+    setAssistantChat(prev => [...prev, { role: 'user', text: query }]);
+    setIsAsking(true);
+
+    try {
+      const response = await askLinguisticAssistant(currentLang, query);
+      setAssistantChat(prev => [...prev, { role: 'assistant', text: response }]);
+    } catch (err) {
+      setError("Assistant connection failed.");
+    } finally {
+      setIsAsking(false);
     }
   };
 
@@ -205,9 +249,9 @@ const App: React.FC = () => {
           <p className="text-sm text-slate-500">Gemini builds rules for syntax, morphology, and basic vocabulary.</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
-          <i className="fa-solid fa-share-nodes text-indigo-500 mb-4 text-xl"></i>
-          <h3 className="font-bold text-slate-800 mb-2">Universal Links</h3>
-          <p className="text-sm text-slate-500">Share your entire language via a single encoded URL.</p>
+          <i className="fa-solid fa-robot text-indigo-500 mb-4 text-xl"></i>
+          <h3 className="font-bold text-slate-800 mb-2">Linguistic AI Assistant</h3>
+          <p className="text-sm text-slate-500">Get suggestions on grammar and instantly extend your lexicon.</p>
         </div>
       </div>
     </div>
@@ -303,7 +347,7 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-3">
             <Button onClick={handleGenerate} loading={isGenerating} size="lg" className="w-full">
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> 
-              {currentLang.vocabulary?.length ? 'Regenerate Language' : 'Generate Language'}
+              {currentLang.vocabulary?.length ? 'Regenerate Base' : 'Generate Language'}
             </Button>
             
             {currentLang.vocabulary?.length ? (
@@ -323,10 +367,56 @@ const App: React.FC = () => {
               <div className="flex items-start">
                 <i className="fa-solid fa-circle-exclamation mr-2 mt-0.5"></i>
                 <div>
-                  <p className="font-bold mb-1">Generation Issue</p>
+                  <p className="font-bold mb-1">Issue</p>
                   <p className="opacity-90">{error}</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {currentLang.description && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[400px]">
+              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                <i className="fa-solid fa-robot text-indigo-500 mr-2"></i> Linguistic Assistant
+              </h2>
+              <div className="flex-grow overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar text-sm">
+                {assistantChat.length === 0 && (
+                  <p className="text-slate-400 italic text-center py-8">Ask me anything about your language's structure or evolution.</p>
+                )}
+                {assistantChat.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] px-3 py-2 rounded-xl ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                {isAsking && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-100 px-3 py-2 rounded-xl flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-75"></span>
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-150"></span>
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+              <form onSubmit={handleAskAssistant} className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={assistantQuery}
+                  onChange={e => setAssistantQuery(e.target.value)}
+                  placeholder="How to handle cases?"
+                  className="flex-grow px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+                <button 
+                  type="submit" 
+                  disabled={isAsking}
+                  className="bg-indigo-600 text-white w-9 h-9 rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  <i className="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+              </form>
             </div>
           )}
         </div>
@@ -385,19 +475,33 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                   <h2 className="text-lg font-bold text-slate-900 mb-4">Lexicon Sample</h2>
+                   <h2 className="text-lg font-bold text-slate-900 mb-4">Lexicon Overview</h2>
                    <div className="flex flex-wrap gap-2">
-                     {currentLang.vocabulary?.slice(0, 12).map(word => (
+                     {currentLang.vocabulary?.slice(0, 15).map(word => (
                        <span key={word.id} className="px-2 py-1 bg-slate-50 border border-slate-100 rounded text-xs">
                          <span className="ipa-font font-bold text-indigo-700">{word.native}</span>: {word.meaning}
                        </span>
                      ))}
                    </div>
+                   {currentLang.vocabulary && currentLang.vocabulary.length > 15 && (
+                     <p className="text-[10px] text-slate-400 mt-2">+{currentLang.vocabulary.length - 15} more in dictionary</p>
+                   )}
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <h2 className="text-xl font-bold text-slate-900 mb-6">3. Dictionary</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-slate-900">3. Dictionary</h2>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleExtendVocabulary} 
+                    loading={isExtending}
+                    className="text-xs"
+                  >
+                    <i className="fa-solid fa-plus-circle mr-2"></i> Add 10 Words
+                  </Button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -536,7 +640,7 @@ const App: React.FC = () => {
               Gemini 3 Flash Online
             </div>
             <p className="text-xs text-slate-500 mt-4">
-              v2.5.2 • React 19 Engine
+              v2.6.0 • AI Assistant Module Active
             </p>
           </div>
         </div>

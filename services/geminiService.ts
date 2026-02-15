@@ -1,15 +1,15 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { GrammarRules, VocabularyWord } from "../types";
+import { Conlang, GrammarRules, VocabularyWord } from "../types";
+
+const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateLanguageCore = async (
   name: string,
   vibe: string,
   phonemes: string[]
 ): Promise<{ grammar: GrammarRules; vocabulary: VocabularyWord[]; description: string }> => {
-  // Use the API key exclusively from process.env.API_KEY as per guidelines
-  const apiKey = process.env.API_KEY;
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = getAI();
   
   const prompt = `
     You are an expert conlanger. 
@@ -34,7 +34,7 @@ export const generateLanguageCore = async (
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            description: { type: Type.STRING, description: "A brief description of the language's character and aesthetic." },
+            description: { type: Type.STRING },
             grammar: {
               type: Type.OBJECT,
               properties: {
@@ -64,30 +64,81 @@ export const generateLanguageCore = async (
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("The linguistic engine returned an empty response.");
-    
-    // Clean potential markdown or extra whitespace to ensure valid JSON parsing
-    const cleanJson = text.trim().replace(/^```json/, '').replace(/```$/, '').trim();
-    
-    try {
-      return JSON.parse(cleanJson);
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError, "Raw text:", text);
-      throw new Error("The engine produced an invalid linguistic structure. Please try again.");
-    }
+    return JSON.parse(response.text.trim());
   } catch (e: any) {
-    console.error("Linguistic Engine Error:", e);
-    
-    // Handle specific API errors
-    if (e?.message?.includes('401') || e?.message?.includes('403')) {
-      throw new Error("API Key Authentication Failed. Please check that your environment's API Key is valid and active.");
-    } else if (e?.message?.includes('429')) {
-      throw new Error("Too many requests. Please wait a moment before refining the language again.");
-    } else if (e?.message?.includes('404')) {
-      throw new Error("The linguistic model is temporarily unavailable. Please try again in a few minutes.");
-    }
-    
-    throw new Error(e?.message || "The AI failed to construct the language. Please check your settings or try a different phonetic combination.");
+    throw new Error(e?.message || "Linguistic engine failure.");
+  }
+};
+
+export const extendVocabulary = async (
+  lang: Partial<Conlang>,
+  count: number = 10
+): Promise<VocabularyWord[]> => {
+  const ai = getAI();
+  const prompt = `
+    Given the conlang "${lang.name}" with the following characteristics:
+    Vibe: ${lang.description}
+    Phonemes: ${lang.phonemes?.join(', ')}
+    Grammar: ${JSON.stringify(lang.grammar)}
+    Existing Words: ${lang.vocabulary?.map(v => v.meaning).join(', ')}
+
+    Generate ${count} NEW unique vocabulary words. 
+    Ensure 'native' and 'pronunciation' strictly follow the phonetic inventory and phonotactics implied by existing words.
+    Output MUST be valid JSON.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              native: { type: Type.STRING },
+              meaning: { type: Type.STRING },
+              pronunciation: { type: Type.STRING }
+            },
+            required: ['id', 'native', 'meaning', 'pronunciation']
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text.trim());
+  } catch (e: any) {
+    throw new Error("Failed to extend vocabulary.");
+  }
+};
+
+export const askLinguisticAssistant = async (
+  lang: Partial<Conlang>,
+  query: string
+): Promise<string> => {
+  const ai = getAI();
+  const prompt = `
+    You are a professional linguistic consultant helping a conlanger.
+    Language Context:
+    Name: ${lang.name}
+    Description: ${lang.description}
+    Phonemes: ${lang.phonemes?.join(', ')}
+    Grammar: ${JSON.stringify(lang.grammar)}
+
+    User Query: "${query}"
+
+    Provide a concise, helpful, and linguistically sound answer or suggestion. Keep it under 150 words.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+    });
+    return response.text;
+  } catch (e: any) {
+    throw new Error("Assistant is currently unavailable.");
   }
 };
