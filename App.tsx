@@ -17,9 +17,9 @@ const App: React.FC = () => {
     vocabulary: [],
     grammar: {
       wordOrder: 'SVO',
-      pluralRule: 'Suffix -s',
-      tenseRule: 'Prefix re-',
-      adjectivePlacement: 'Before noun'
+      pluralRule: '',
+      tenseRule: '',
+      adjectivePlacement: ''
     }
   });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,7 +29,6 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Check for saved data
     const saved = localStorage.getItem('glossaforge_saved');
     if (saved) {
       try {
@@ -39,7 +38,6 @@ const App: React.FC = () => {
       }
     }
 
-    // Check for Deep Link
     const urlParams = new URLSearchParams(window.location.search);
     const sharedData = urlParams.get('share');
     if (sharedData) {
@@ -73,6 +71,7 @@ const App: React.FC = () => {
       }
     });
     setAppState(AppState.EDITOR);
+    setError(null);
   };
 
   const handleApplyPreset = (preset: typeof PRESETS[0]) => {
@@ -85,7 +84,7 @@ const App: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!currentLang.name || (currentLang.phonemes?.length || 0) === 0) {
-      setError("Please provide a name and select some sounds first.");
+      setError("Provide a language name and select phonemes to proceed.");
       return;
     }
     setError(null);
@@ -93,7 +92,7 @@ const App: React.FC = () => {
     try {
       const result = await generateLanguageCore(
         currentLang.name!,
-        currentLang.vibe || 'Generic fantasy language',
+        currentLang.vibe || 'Generic constructed language',
         currentLang.phonemes!
       );
       setCurrentLang(prev => ({
@@ -102,8 +101,8 @@ const App: React.FC = () => {
         grammar: result.grammar,
         vocabulary: result.vocabulary
       }));
-    } catch (err) {
-      setError("AI Generation error. Please check your API key configuration.");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred during generation.");
     } finally {
       setIsGenerating(false);
     }
@@ -129,7 +128,7 @@ const App: React.FC = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentLang));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `${currentLang.name.toLowerCase()}_glossa.json`);
+    downloadAnchorNode.setAttribute("download", `${currentLang.name.toLowerCase()}_conlang.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -145,7 +144,7 @@ const App: React.FC = () => {
         setCurrentLang(json);
         setAppState(AppState.EDITOR);
       } catch (err) {
-        setError("Invalid language file.");
+        setError("Could not parse language file.");
       }
     };
     reader.readAsText(file);
@@ -252,8 +251,6 @@ const App: React.FC = () => {
   const renderEditor = () => (
     <div className="max-w-6xl mx-auto py-12 px-4">
       <div className="flex flex-col lg:flex-row gap-8">
-        
-        {/* Left Sidebar */}
         <div className="w-full lg:w-1/3 space-y-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
             <h2 className="text-lg font-bold text-slate-900 mb-4">Core Identity</h2>
@@ -300,7 +297,7 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-3">
             <Button onClick={handleGenerate} loading={isGenerating} size="lg" className="w-full">
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> 
-              {currentLang.vocabulary?.length ? 'Re-Generate' : 'Generate Language'}
+              {currentLang.vocabulary?.length ? 'Refine Language' : 'Generate Language'}
             </Button>
             
             {currentLang.vocabulary?.length ? (
@@ -316,13 +313,12 @@ const App: React.FC = () => {
             <Button variant="ghost" onClick={() => setAppState(AppState.HOME)}>Exit</Button>
           </div>
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
+            <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 shadow-sm animate-pulse">
               <i className="fa-solid fa-circle-exclamation mr-2"></i> {error}
             </div>
           )}
         </div>
 
-        {/* Right Content */}
         <div className="w-full lg:w-2/3 space-y-8">
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-6">
@@ -333,13 +329,16 @@ const App: React.FC = () => {
                 </span>
                 <button onClick={handleShare} className={`text-sm font-semibold transition-colors flex items-center ${shareSuccess ? 'text-green-600' : 'text-slate-400 hover:text-indigo-600'}`}>
                    <i className={`fa-solid ${shareSuccess ? 'fa-check' : 'fa-share-nodes'} mr-2`}></i>
-                   {shareSuccess ? 'Link Copied!' : 'Copy Share URL'}
+                   {shareSuccess ? 'Copied' : 'Share'}
                 </button>
               </div>
             </div>
             <IpaPicker 
               selected={currentLang.phonemes || []} 
-              onChange={symbols => setCurrentLang(prev => ({ ...prev, phonemes: symbols }))} 
+              onChange={symbols => {
+                setError(null);
+                setCurrentLang(prev => ({ ...prev, phonemes: symbols }));
+              }} 
             />
           </div>
 
@@ -414,16 +413,16 @@ const App: React.FC = () => {
               {isGenerating ? (
                 <div className="flex flex-col items-center">
                    <div className="inline-block animate-spin h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full mb-6"></div>
-                   <h3 className="text-xl font-bold text-slate-900 mb-2">Engaging Neural Linguistics...</h3>
-                   <p className="text-slate-500 max-w-sm mx-auto">Gemini is analyzing your phonemes and generating logical grammar rules.</p>
+                   <h3 className="text-xl font-bold text-slate-900 mb-2">Analyzing Phonemes...</h3>
+                   <p className="text-slate-500 max-w-sm mx-auto">Gemini 3 Pro is constructing grammar and vocabulary based on your phonetic inventory.</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
                   <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6 text-slate-300">
                     <i className="fa-solid fa-microchip text-3xl"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Build</h3>
-                  <p className="text-slate-500 max-w-sm mx-auto">Configure your sound inventory and name your language to begin generation.</p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Construct</h3>
+                  <p className="text-slate-500 max-w-sm mx-auto">Select a few sounds from the inventory and provide a name to start building your language.</p>
                 </div>
               )}
             </div>
@@ -446,8 +445,8 @@ const App: React.FC = () => {
             </div>
             <div className="hidden md:flex items-center space-x-2">
               <Button variant="ghost" size="sm" onClick={() => setAppState(AppState.SAVED)}>Library</Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowPublishGuide(true)}>Deployment Tips</Button>
-              <Button size="sm" onClick={handleStartNew} className="ml-4">Start Project</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowPublishGuide(true)}>Help</Button>
+              <Button size="sm" onClick={handleStartNew} className="ml-4">New Project</Button>
             </div>
           </div>
         </div>
@@ -464,7 +463,7 @@ const App: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-2xl max-md w-full overflow-hidden animate-in zoom-in-95 duration-200 max-w-md">
             <div className="p-8">
               <div className="flex justify-between items-center mb-8 text-left">
-                <h3 className="text-2xl font-extrabold text-slate-900">Publishing Help</h3>
+                <h3 className="text-2xl font-extrabold text-slate-900">System Help</h3>
                 <button onClick={() => setShowPublishGuide(false)} className="text-slate-400 hover:text-slate-600 bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                   <i className="fa-solid fa-times text-lg"></i>
                 </button>
@@ -473,27 +472,27 @@ const App: React.FC = () => {
                 <div className="flex gap-4">
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
-                    <h4 className="font-bold text-slate-800">Use a Build Step</h4>
-                    <p className="text-sm text-slate-500 mt-1">Netlify needs standard JavaScript. Use a tool like <b>Vite</b> to compile these files before uploading.</p>
+                    <h4 className="font-bold text-slate-800">Language Generation</h4>
+                    <p className="text-sm text-slate-500 mt-1">Uses Gemini 3 Pro to create grammatically consistent languages. Requires a valid API key in environment variables.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">2</div>
                   <div>
-                    <h4 className="font-bold text-slate-800">Environment Keys</h4>
-                    <p className="text-sm text-slate-500 mt-1">Set your <code>API_KEY</code> in the Netlify dashboard under &quot;Site settings &gt; Environment variables&quot;.</p>
+                    <h4 className="font-bold text-slate-800">IPA Precision</h4>
+                    <p className="text-sm text-slate-500 mt-1">Symbols are derived from the Gentium Book Plus font to ensure correct rendering of combining marks.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0">3</div>
                   <div>
-                    <h4 className="font-bold text-slate-800">Share your App</h4>
-                    <p className="text-sm text-slate-500 mt-1">Once deployed, your Netlify link will work perfectly with the Share Link feature!</p>
+                    <h4 className="font-bold text-slate-800">Deep Sharing</h4>
+                    <p className="text-sm text-slate-500 mt-1">Sharing encodes the entire project state into the URL, allowing instant collaboration without a backend.</p>
                   </div>
                 </div>
               </div>
               <div className="mt-10">
-                <Button className="w-full py-4 rounded-2xl text-lg font-bold shadow-xl shadow-indigo-100" onClick={() => setShowPublishGuide(false)}>Got it!</Button>
+                <Button className="w-full py-4 rounded-2xl text-lg font-bold shadow-xl shadow-indigo-100" onClick={() => setShowPublishGuide(false)}>Close</Button>
               </div>
             </div>
           </div>
@@ -508,30 +507,29 @@ const App: React.FC = () => {
               <span className="text-xl font-bold text-white tracking-tighter">GlossaForge</span>
             </div>
             <p className="text-sm leading-relaxed">
-              Professional tools for linguistic worldbuilding. Built with passion for writers, game designers, and conlangers.
+              Professional tools for linguistic worldbuilding. Built for writers, game designers, and conlangers.
             </p>
           </div>
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">Resources</h4>
             <ul className="text-sm space-y-2">
               <li><a href="https://www.internationalphoneticassociation.org/" target="_blank" rel="noopener" className="hover:text-indigo-400 transition-colors">IPA Official Site</a></li>
-              <li><a href="https://github.com" target="_blank" rel="noopener" className="hover:text-indigo-400 transition-colors">Developer API</a></li>
-              <li><a href="#" onClick={(e) => {e.preventDefault(); setShowPublishGuide(true);}} className="hover:text-indigo-400 transition-colors">Deployment Documentation</a></li>
+              <li><a href="#" className="hover:text-indigo-400 transition-colors">Documentation</a></li>
             </ul>
           </div>
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">System Status</h4>
             <div className="flex items-center text-xs text-green-400 bg-green-400/10 self-start px-3 py-1 rounded-full border border-green-400/20">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-              Gemini AI Engine Online
+              Gemini 3 Pro Online
             </div>
             <p className="text-xs text-slate-500 mt-4">
-              Version 2.1.0 • Running on React 19 + Gemini 3
+              v2.5.1 • React 19 Engine
             </p>
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-slate-800 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <span>&copy; 2026 GlossaForge Laboratory. All rights reserved.</span>
+          <span>&copy; 2026 GlossaForge.</span>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white"><i className="fa-brands fa-github text-lg"></i></a>
             <a href="#" className="hover:text-white"><i className="fa-brands fa-discord text-lg"></i></a>

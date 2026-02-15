@@ -5,16 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlossaForge - Language Construction Lab</title>
-  
-  <!-- Critical: Define process.env before any modules load to prevent ReferenceErrors -->
-  <script>
-    window.process = {
-      env: {
-        NODE_ENV: 'production',
-        API_KEY: '' // This will be populated by the platform or handled safely in code
-      }
-    };
-  </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,7 +43,6 @@
 </head>
 <body class="bg-slate-50">
   <div id="root"></div>
-  <!-- Use a slightly more robust pathing for the entry point -->
   <script type="module" src="index.tsx"></script>
 </body>
 </html>
